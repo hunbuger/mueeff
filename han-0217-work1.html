@@ -1,8 +1,146 @@
-<HTML>
-  <HEAD>
-    <TITLE>My first page</TITLE>
-  </HEAD>
-  <BODY>
-    我是超级大帅哥
-  </BODY>
-</HTML>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网页信息查询工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+        body {
+            background-color: #0f172a;
+            color: #fff;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 35px;
+            font-size: 32px;
+            color: #38bdf8;
+        }
+        .input-box {
+            display: flex;
+            gap:10px;
+            margin-bottom: 25px;
+        }
+        #urlInput {
+            flex: 1;
+            padding:14px 16px;
+            font-size:16px;
+            border:none;
+            border-radius:8px;
+            background:#1e293b;
+            color:#fff;
+            outline:none;
+        }
+        #urlInput::placeholder{
+            color:#94a3b8;
+        }
+        #queryBtn {
+            padding:0 24px;
+            font-size:16px;
+            background:#0ea5e9;
+            color:white;
+            border:none;
+            border-radius:8px;
+            cursor:pointer;
+            transition:0.2s;
+        }
+        #queryBtn:hover {
+            background:#0284c7;
+        }
+        .result-card {
+            background:#1e293b;
+            padding:24px;
+            border-radius:12px;
+            min-height:180px;
+        }
+        .tip{
+            color:#94a3b8;
+            text-align:center;
+            padding:40px 0;
+        }
+        .item{
+            margin-bottom:14px;
+            line-height:1.7;
+        }
+        .label{
+            color:#38bdf8;
+            font-weight:bold;
+        }
+        .error{
+            color:#f87171;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>网页信息查询</h1>
+        <div class="input-box">
+            <input type="text" id="urlInput" placeholder="请输入完整网址，例如 https://www.baidu.com">
+            <button id="queryBtn">查询</button>
+        </div>
+        <div class="result-card" id="resultBox">
+            <div class="tip">输入网址后点击查询</div>
+        </div>
+    </div>
+
+    <script>
+        const urlInput = document.getElementById('urlInput');
+        const queryBtn = document.getElementById('queryBtn');
+        const resultBox = document.getElementById('resultBox');
+
+        queryBtn.addEventListener('click', async ()=>{
+            const url = urlInput.value.trim();
+            if(!url){
+                resultBox.innerHTML = `<div class="error">请输入完整网址！</div>`;
+                return;
+            }
+            resultBox.innerHTML = `<div class="tip">正在查询中...</div>`;
+
+            try {
+                // 注意：浏览器跨域限制，部分网站无法直接获取
+                const res = await fetch(url, {
+                    mode:"cors"
+                });
+                const text = await res.text();
+                // 简单提取网页title
+                const titleReg = /<title>(.*?)<\/title>/i;
+                const titleMatch = text.match(titleReg);
+                const title = titleMatch ? titleMatch[1] : "未获取到标题";
+
+                resultBox.innerHTML = `
+                    <div class="item">
+                        <span class="label">网址：</span>${url}
+                    </div>
+                    <div class="item">
+                        <span class="label">HTTP状态码：</span>${res.status} ${res.statusText}
+                    </div>
+                    <div class="item">
+                        <span class="label">网页标题：</span>${title}
+                    </div>
+                    <div class="item">
+                        <span class="label">响应大小：</span>${(text.length/1024).toFixed(2)} KB
+                    </div>
+                `;
+            }catch(err){
+                resultBox.innerHTML = `
+                    <div class="error">查询失败！<br>
+                    原因：浏览器跨域限制，部分网站不允许前端直接访问。<br>
+                    错误信息：${err.message}
+                    </div>
+                `;
+            }
+        })
+    </script>
+</body>
+</html>
